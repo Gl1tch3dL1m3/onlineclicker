@@ -15,17 +15,6 @@ License MIT, see LICENSE for more details.
 # Take a look, but try not to break anything.
 # Want to suggest something? Contact me (glitchedlime) on our Discord (https://discord.gg/StJxMSc8kM)!
 
-# zmeniť skipped heartbeat system tak aby počítal počet skipov a po štyroch skipoch odpojil hráča (OTESTOVAŤ)
-# spraviť to aby si človek mohol dať . _ - do usernamu (OTESTOVAŤ)
-# potom sprav Server sekciu v main.js (OTESTOVAŤ)
-# bug kde server disconnectoval hráčov kvôli case-insensitive usernames (OTESTOVAŤ)
-# pridaný /get_discord_user_game_info
-# usernames už nie sú case-sensitive
-# zmeniť color system (nebudú definované na cliente ale na serveri a server bude posielať clientovi kód farby) (asi nebude, idk)
-# spraviť guest system - môže sa pripojiť ale nebude môcť používať chat (iba čítať) a nebude si môcť určiť username (možno inokedy)
-# ban a unban funkcia (možno inokedy)
-# dorob dokumentáciu
-
 from __future__ import annotations
 from sys import modules
 
