@@ -15,9 +15,6 @@ License MIT, see LICENSE for more details.
 # Take a look, but try not to break anything.
 # Want to suggest something? Contact me (glitchedlime) on our Discord (https://discord.gg/StJxMSc8kM)!
 
-
-# keď to budeš releasovať tak nezabudni zmeniť MySQL DB logs column (pridaj id column)
-
 # zmeniť skipped heartbeat system tak aby počítal počet skipov a po štyroch skipoch odpojil hráča (OTESTOVAŤ)
 # spraviť to aby si človek mohol dať . _ - do usernamu (OTESTOVAŤ)
 # potom sprav Server sekciu v main.js (OTESTOVAŤ)
@@ -62,7 +59,7 @@ if _docs_path.exists():
         if file.name.endswith((".py", ".md")):
             __doc__ += file.read_text(encoding="utf-8")
 
-_testing = True # don't mind this :p
+_testing = False # don't mind this :p
 _chat_ratelimit: dict[websockets.ServerConnection, datetime.datetime] = {}
 _missed_hearbeat: dict[websockets.ServerConnection, int] = {}
 

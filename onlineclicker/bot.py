@@ -13,7 +13,7 @@ from os import getenv
 
 # https://discord.gg/StJxMSc8kM
 
-testing = True
+testing = False
 players_column = "test_players" if testing else "players"
 colors = (["Red", ":red_square:"], ["Orange", ":orange_square:"], ["Yellow", ":yellow_square:"], ["Green", ":green_square:"], ["Blue", ":blue_square:"], ["Purple", ":purple_square:"], ["Brown", ":brown_square:"])
 
@@ -21,6 +21,7 @@ load_dotenv("./config/.env")
 config = configparser.ConfigParser(allow_no_value=True)
 config.read("./config/config.ini")
 bot = discord.Bot(intents=discord.Intents.all())
+pool = None
 
 def _get_ini_value(section, value, _type=None):
     try:
@@ -112,14 +113,6 @@ async def delete_user(discord_id: int):
 
 @bot.event
 async def on_ready():
-    guild = bot.get_guild(SERVER_ID)
-    role = guild.get_role(REGISTERED_ROLE_ID)
-    registered_users = await execDB("SELECT discord_id FROM players")
-    
-    for member in guild.members:
-        if [member.id] in registered_users and role not in member.roles:
-            await member.add_roles(role)
-
     if DB_TYPE == "MySQL":
         global pool
         pool = await aiomysql.create_pool(
@@ -133,6 +126,14 @@ async def on_ready():
             autocommit=True,
             connect_timeout=None
         )
+
+    guild = bot.get_guild(SERVER_ID)
+    role = guild.get_role(REGISTERED_ROLE_ID)
+    registered_users = await execDB("SELECT discord_id FROM players")
+    
+    for member in guild.members:
+        if [member.id] in registered_users and role not in member.roles:
+            await member.add_roles(role)
 
     # DB caching but it's probably useless because the DB probably won't be big
     # If this changes, I'll implement caching
