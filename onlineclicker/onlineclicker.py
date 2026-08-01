@@ -67,6 +67,7 @@ _testing = True # don't mind this :p
 _chat_ratelimit: dict[websockets.ServerConnection, datetime.datetime] = {}
 _missed_hearbeat: dict[websockets.ServerConnection, int] = {}
 
+Path("./logs").mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     filename="./logs/terminal_out.log",
     level=51,
