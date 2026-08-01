@@ -43,10 +43,13 @@ To install all the libraries (Windows):
 3. In the command prompt, type `pip install -r requirements.txt`. This will install all libraries needed for the server to run.
 4. Close the command prompt.
 
+## Renaming example files
+You will find example files when you download the server (like "server.example.py"). Just remove ".example" from all these files. Make sure to check all folders!
+
 ## Configuring the server
 Your server itself should be fully functional, but it's not ready yet. You can set it up and customize it!
 
-You should look at and edit all files in the `config/` folder. The first time you find "examples" files there, simply remove ".example" from the file names.
+You should look at and edit all files in the `config/` folder.
 
 The `config.ini` file sets basic server properties, such as name, port, admins, etc. The `.env` file sets values ​​that should only be private, such as the database password (if MySQL) and the Discord bot token.
 

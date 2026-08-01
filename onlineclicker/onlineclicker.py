@@ -16,7 +16,6 @@ License MIT, see LICENSE for more details.
 # Want to suggest something? Contact me (glitchedlime) on our Discord (https://discord.gg/StJxMSc8kM)!
 
 
-# (hrať sa s veľkosťami badges a zistiť ako vybrať výšku textu)
 # keď to budeš releasovať tak nezabudni zmeniť MySQL DB logs column (pridaj id column)
 
 # zmeniť skipped heartbeat system tak aby počítal počet skipov a po štyroch skipoch odpojil hráča (OTESTOVAŤ)
