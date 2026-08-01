@@ -78,25 +78,25 @@ _config = configparser.ConfigParser(allow_no_value=True)
 _config.read("./config/config.ini")
 load_dotenv("./config/.env")
 
-def _convert_ini_type(value, _type):
+def _get_ini_value(section, value, _type):
     try:
-        value = _type(value)
+        value =_type(_config.get(section, value))
         return value
     except:
         return None
 
-_DB_TYPE = _config.get("Global", "DB_TYPE") if _config.get("Global", "DB_TYPE") != None else "SQLite3"
+_DB_TYPE = _get_ini_value("Global", "DB_TYPE", str) if _get_ini_value("Global", "DB_TYPE", str) != None else "SQLite3"
 _PLAYERS_COLUMN = "test_players" if _testing else "players" # don't mind this - testing purposes
 _CURRENT_VERSION = "1.0.6" # this is a mod client version
-_PORT = _convert_ini_type(_config.get("Server", "PORT"), int)
-_SERVER_NAME = _config.get("Server", "SERVER_NAME") if _config.get("Server", "SERVER_NAME") != None else "OnlineClicker Server"
-_OWNERS = [(int(owner.strip()) if owner.strip().isnumeric() else owner.strip()) for owner in _config.get("Server", "OWNERS").split(',')] if _config.get("Server", "OWNERS") != None else []
-_MODERATORS = [(int(mod.strip()) if mod.strip().isnumeric() else mod.strip()) for mod in _config.get("Server", "MODERATORS").split(',')] if _config.get("Server", "MODERATORS") != None else []
-_SUPPORTERS = [(int(supporter.strip()) if supporter.strip().isnumeric() else supporter.strip()) for supporter in _config.get("Server", "SUPPORTERS").split(',')] if _config.get("Server", "SUPPORTERS") != None else []
-_VERIFIED = [(int(verified.strip()) if verified.strip().isnumeric() else verified.strip()) for verified in _config.get("Server", "VERIFIED").split(',')] if _config.get("Server", "VERIFIED") != None else []
-_NODE_LIMIT = _convert_ini_type(_config.get("Server", "MAX_IN_LOBBY"), int)
-_MAX_PLAYERS = _convert_ini_type(_config.get("Server", "MAX_PLAYERS"), int)
-_LOG_MESSAGES = _convert_ini_type(_config.get("Server", "LOG_MESSAGES"), bool)
+_PORT = _get_ini_value("Server", "PORT", int)
+_SERVER_NAME = _get_ini_value("Server", "SERVER_NAME", str) if _get_ini_value("Server", "SERVER_NAME", str) != None else "OnlineClicker Server"
+_OWNERS = [(int(owner.strip()) if owner.strip().isnumeric() else owner.strip()) for owner in _get_ini_value("Server", "OWNERS", str).split(',')] if _get_ini_value("Server", "OWNERS", str) != None else []
+_MODERATORS = [(int(mod.strip()) if mod.strip().isnumeric() else mod.strip()) for mod in _get_ini_value("Server", "MODERATORS", str).split(',')] if _get_ini_value("Server", "MODERATORS", str) != None else []
+_SUPPORTERS = [(int(supporter.strip()) if supporter.strip().isnumeric() else supporter.strip()) for supporter in _get_ini_value("Server", "SUPPORTERS", str).split(',')] if _get_ini_value("Server", "SUPPORTERS", str) != None else []
+_VERIFIED = [(int(verified.strip()) if verified.strip().isnumeric() else verified.strip()) for verified in _get_ini_value("Server", "VERIFIED", str).split(',')] if _get_ini_value("Server", "VERIFIED", str) != None else []
+_NODE_LIMIT = _get_ini_value("Server", "MAX_IN_LOBBY", int)
+_MAX_PLAYERS = _get_ini_value("Server", "MAX_PLAYERS", int)
+_LOG_MESSAGES = _get_ini_value("Server", "LOG_MESSAGES", bool)
 
 _profanity_filter = no_profanity.ProfanityFilter()
 _pool = None
