@@ -23,18 +23,18 @@ config.read("./config/config.ini")
 db_type = config.get("Global", "DB_TYPE") if config.get("Global", "DB_TYPE") != None else "SQLite3"
 bot = discord.Bot(intents=discord.Intents.all())
 
-def convert_ini_type(value, _type):
+def _get_ini_value(section, value, _type):
     try:
-        value = _type(value)
+        value =_type(config.get(section, value))
         return value
     except:
         return None
 
 # TAKE A LOOK AT .env FILE!!!
 
-MODROLES = [int(role.strip()) for role in config.get("Discord", "MODROLES").split(",") if role != ""] if config.get("Discord", "MODROLES") != None else []
-SERVER_ID = convert_ini_type(config.get("Discord", "DISCORD_SERVER_ID"), int)
-REGISTERED_ROLE_ID = convert_ini_type(config.get("Discord", "REGISTERED_ROLE_ID"), int)
+MODROLES = [int(role.strip()) for role in _get_ini_value("Discord", "MODROLES", str).split(",") if role != ""] if _get_ini_value("Discord", "MODROLES", str) != None else []
+SERVER_ID = _get_ini_value("Discord", "DISCORD_SERVER_ID", int)
+REGISTERED_ROLE_ID = _get_ini_value("Discord", "REGISTERED_ROLE_ID", int)
 username_change_cooldowns = {}
 
 # { "table_name": [ row1, row2, ... ], ... }
