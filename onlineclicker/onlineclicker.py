@@ -529,7 +529,7 @@ class Server:
         asyncio.create_task(self.__validate_players())
 
         async with websockets.serve(self.__handle_client, "localhost" if _testing else "0.0.0.0", self.port):
-            await _call_registered_function(self.__registered_events, "on_ready")
+            await _call_registered_function(self.__registered_events, "on_server_ready")
             if discord_bot:
                 await bot.start(os.getenv("DISCORD_BOT_TOKEN"))
             else:

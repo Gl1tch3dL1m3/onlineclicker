@@ -8,7 +8,7 @@ from onlineclicker.onlineclicker import *
 server = Server()
 
 @server.event
-async def on_ready():
+async def on_server_ready():
     print("This will be printed when the server is ready to operate.")
 
 @server.event
@@ -18,7 +18,7 @@ async def on_player_connect(player: Player):
 server.initialize()
 ```
 
-## ```Server.on_ready()```
+## ```Server.on_server_ready()```
 Called when the server is ready to operate.
 
 ## ```Server.on_client_error(websocket, error, is_kicked)```
