@@ -22,16 +22,18 @@ config = configparser.ConfigParser(allow_no_value=True)
 config.read("./config/config.ini")
 bot = discord.Bot(intents=discord.Intents.all())
 
-def _get_ini_value(section, value, _type):
+def _get_ini_value(section, value, _type=None):
     try:
-        value =_type(config.get(section, value))
+        value = config.get(section, value)
+        if _type != None:
+            value = _type(value)
         return value
     except:
         return None
 
 # TAKE A LOOK AT .env FILE!!!
-DB_TYPE = _get_ini_value("Global", "DB_TYPE", str) if _get_ini_value("Global", "DB_TYPE", str) != None else "SQLite3"
-MODROLES = [int(role.strip()) for role in _get_ini_value("Discord", "MODROLES", str).split(",") if role != ""] if _get_ini_value("Discord", "MODROLES", str) != None else []
+DB_TYPE = _get_ini_value("Global", "DB_TYPE") if _get_ini_value("Global", "DB_TYPE") != None else "SQLite3"
+MODROLES = [int(role.strip()) for role in _get_ini_value("Discord", "MODROLES").split(",") if role != ""] if _get_ini_value("Discord", "MODROLES") != None else []
 SERVER_ID = _get_ini_value("Discord", "DISCORD_SERVER_ID", int)
 REGISTERED_ROLE_ID = _get_ini_value("Discord", "REGISTERED_ROLE_ID", int)
 username_change_cooldowns = {}
@@ -42,7 +44,7 @@ username_change_cooldowns = {}
 async def execDB(mysql: str, vars: tuple = None, sqlite: str = None) -> list:
     selected = []
 
-    if db_type == "MySQL":
+    if DB_TYPE == "MySQL":
         async with pool.acquire() as con:
             async with con.cursor() as cur:
                 if vars != "" and vars != None:
@@ -55,7 +57,7 @@ async def execDB(mysql: str, vars: tuple = None, sqlite: str = None) -> list:
                 for row in rows:
                     selected.append(list(row))
 
-    elif db_type == "SQLite":
+    elif DB_TYPE == "SQLite":
         async with aiosqlite.connect("sqlite3.db") as db:
             mysql = mysql.replace("%s", "?")
             sqlite = sqlglot.transpile(mysql, "mysql", "sqlite")[0] if sqlite == None else sqlite
@@ -118,7 +120,7 @@ async def on_ready():
         if [member.id] in registered_users and role not in member.roles:
             await member.add_roles(role)
 
-    if db_type == "MySQL":
+    if DB_TYPE == "MySQL":
         global pool
         pool = await aiomysql.create_pool(
             **{
@@ -153,7 +155,7 @@ async def on_ready():
             db_cache[table].append(row)
     """
     
-    if db_type == "MySQL":
+    if DB_TYPE == "MySQL":
         # Pinging connection between DB just in case
         while True:
             await execDB("DO 0;")
