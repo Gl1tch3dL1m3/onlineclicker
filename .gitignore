@@ -4,4 +4,4 @@ config/config.ini
 config/.env
 sqlite3.db
 logs/*
-./server.py
+server.py
