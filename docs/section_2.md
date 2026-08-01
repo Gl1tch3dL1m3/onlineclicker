@@ -49,7 +49,7 @@ async def on_player_chat(player: Player, message: Message):
 
 # You can also program your Discord bot here by using the "bot" variable from "onlineclicker/bot.py"
 # The Discord bot is made with Pycord (https://pycord.dev/)
-@bot.event
+@bot.listen()
 async def on_ready():
     print("Discord bot is ready!")
 
