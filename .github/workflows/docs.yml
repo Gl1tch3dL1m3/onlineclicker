@@ -21,11 +21,11 @@ jobs:
           python-version: '3.12'
 
       - run: pip install -r requirements.txt pdoc
-      - run: PYTHONPATH=. python -m pdoc onlineclicker/onlineclicker.py --logo "https://github.com/glitchedlime/onlineclicker/blob/main/docs/logo.png?raw=true" --favicon "https://github.com/glitchedlime/onlineclicker/blob/main/docs/logo.png?raw=true" --no-include-undocumented --template-directory docs
+      - run: python -m pdoc -o website/ onlineclicker/onlineclicker.py --logo "https://github.com/glitchedlime/onlineclicker/blob/main/docs/logo.png?raw=true" --favicon "https://github.com/glitchedlime/onlineclicker/blob/main/docs/logo.png?raw=true" --no-include-undocumented --template-directory docs
       
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: docs/
+          path: website/
 
   deploy:
     needs: build
