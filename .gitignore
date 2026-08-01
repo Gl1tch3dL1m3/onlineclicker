@@ -1,5 +1,6 @@
 __pycache__/
 cogs/
+temp/
 config/config.ini
 config/.env
 sqlite3.db
