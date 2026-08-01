@@ -1,0 +1,59 @@
+# Configuring Discord bot
+The Discord bot is needed to create accounts with which players will connect to your server. There is no other system for creating accounts (e.g. emails) yet, but maybe that will change in the future. :)
+
+## Creating a bot
+Creating your own Discord bot is simple. Follow these steps **(the steps might be slightly different for future versions of DDP!)**:
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications).
+2. Click on "New Application".
+3. Enter your bot's name and click "Create".
+4. In the "Bot" section, check all intents (Presence Intent, Server Members Intent and so on).
+5. **Uncheck "Public Bot". Your bot should be private!**
+
+## Inviting your bot
+The Discord bot is created, now we need to get it into your Discord server. It's assumed that you already have a Discord server created.
+
+Follow these steps:
+1. In DDP, go to "Installation" and make sure "User Install" is turned **off** and "Guild Install" is turned **on**.
+2. In "Default Install Settings", add "bot" to scopes in "Guild Install". A "Permissions" menu should appear.
+3. You can add "Administrator" permission to the menu, just to make sure the bot will be accessible.
+4. Now you can invite your bot by visiting the installation link, choosing your server and clicking "Authorize".
+
+And now you should have your bot in your server!
+
+# Programming the server
+**If you can't program in Python, you don't have to continue reading this documentation! Your server is ready!**
+
+If you want to customize your server and Discord bot even more, you can write your own scripts. The script that starts the server is `server.py`. This server script was made to be edited by the server programmer. An example script can be found in the [Quick example](#quick-example) subsection.
+
+## Server architecture
+The server stores certain data in certain places. Here is the documented server architecture:
+- `config/` - Here you can find all server configuration files.
+- `db_config/` - Here you can find scripts for creating a database. SQLite database is created automatically.
+- `docs/` - Here you can find all documentation files.
+- `logs/` - Here you can find server logs. There is usually information or errors here.
+- `onlineclicker/` - Here you can find all OnlineClicker scripts required to run the server. Hovewer, the main script `server.py` is right in the root folder of your server.
+
+## Quick example
+```py
+# server.py
+from onlineclicker.onlineclicker import *
+
+# Creates a server object
+server = Server()
+
+# Makes a bot that sends "pong!" when someone sends "/ping".
+@server.event
+async def on_player_chat(player: Player, message: Message):
+    if message.content == "/ping":
+        await server.send_chat(player.node, Message("GrandmaBot", "pong!", [Badge.VERIFIED], NicknameColor.ORANGE))
+
+# You can also program your Discord bot here by using the "bot" variable from "onlineclicker/bot.py"
+# The Discord bot is made with Pycord (https://pycord.dev/)
+@bot.event
+async def on_ready():
+    print("Discord bot is ready!")
+
+# Starts the server and Discord bot
+server.initialize(discord_bot=True)
+```
+

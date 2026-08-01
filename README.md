@@ -1,0 +1,2 @@
+# OnlineClicker Server
+However you got here (probably via the "Make" button, right?), welcome to the server files for the Cookie Clicker online multiplayer mod - [OnlineClicker](https://steamcommunity.com/sharedfiles/filedetails/?id=3744919354)!
