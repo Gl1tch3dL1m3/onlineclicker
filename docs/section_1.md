@@ -30,7 +30,7 @@ To install Python (Windows):
 Type `cmd` in the search bar. This will open a command prompt. Type `python --version` in the terminal and it should list the version of Python you downloaded.
 
 ## Downloading the server
-Now that you have Python installed, you can download the server files! You can download the latest version of the server by going to the [GitHub page of OnlineClicker](github.com/Gl1tch3dL1m3/onlineclicker), clicking the green "Code" button and downloading the ZIP file.
+Now that you have Python installed, you can download the server files! You can download the latest version of the server by going to the [GitHub page of OnlineClicker](github.com/glitchedlime/onlineclicker), clicking the green "Code" button and downloading the ZIP file.
 
 Don't forget to extract the ZIP file after downloading it!
 
