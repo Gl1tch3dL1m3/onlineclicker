@@ -3,3 +3,4 @@ cogs/
 config/config.ini
 config/.env
 sqlite3.db
+logs/terminal_out.log
