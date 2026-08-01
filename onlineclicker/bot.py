@@ -20,7 +20,6 @@ colors = (["Red", ":red_square:"], ["Orange", ":orange_square:"], ["Yellow", ":y
 load_dotenv("./config/.env")
 config = configparser.ConfigParser(allow_no_value=True)
 config.read("./config/config.ini")
-db_type = config.get("Global", "DB_TYPE") if config.get("Global", "DB_TYPE") != None else "SQLite3"
 bot = discord.Bot(intents=discord.Intents.all())
 
 def _get_ini_value(section, value, _type):
@@ -31,7 +30,7 @@ def _get_ini_value(section, value, _type):
         return None
 
 # TAKE A LOOK AT .env FILE!!!
-
+DB_TYPE = _get_ini_value("Global", "DB_TYPE", str) if _get_ini_value("Global", "DB_TYPE", str) != None else "SQLite3"
 MODROLES = [int(role.strip()) for role in _get_ini_value("Discord", "MODROLES", str).split(",") if role != ""] if _get_ini_value("Discord", "MODROLES", str) != None else []
 SERVER_ID = _get_ini_value("Discord", "DISCORD_SERVER_ID", int)
 REGISTERED_ROLE_ID = _get_ini_value("Discord", "REGISTERED_ROLE_ID", int)
