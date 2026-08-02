@@ -108,8 +108,25 @@ def generate_hash(_str: str):
     hashed_str = bcrypt.hashpw(_str.encode("utf-8"), salt)
     return hashed_str
 
-async def delete_user(discord_id: int):
-    await execDB(f"DELETE FROM {players_column} WHERE discord_id=%s", (discord_id, ))
+async def add_user(user: discord.Member, username: str, password: str):
+    pass_hash = generate_hash(password).decode("utf-8")
+    await execDB(f"INSERT INTO {players_column} VALUES (%s, %s, %s, %s)", (user.id, username, pass_hash, randint(0, len(colors)-1)))
+    if REGISTERED_ROLE_ID:
+        try:
+            await user.add_roles(user.guild.get_role(REGISTERED_ROLE_ID))
+        except:
+            pass
+
+async def delete_user(guild: discord.Guild, user: discord.Member | int):
+    user_id = user if isinstance(user, int) else user.id
+    user = guild.get_member(user) if isinstance(user, int) else user
+
+    await execDB(f"DELETE FROM {players_column} WHERE discord_id=%s", (user_id, ))
+    if REGISTERED_ROLE_ID and isinstance(user, discord.Member):
+        try:
+            await user.remove_roles(guild.get_role(REGISTERED_ROLE_ID))
+        except:
+            pass
 
 @bot.event
 async def on_ready():
@@ -171,17 +188,15 @@ async def register(ctx: discord.ApplicationContext, username: discord.Option(str
     banned = await execDB("SELECT reason FROM bans WHERE discord_id=%s", (ctx.user.id, ))
 
     if len(banned) != 0:
-        await ctx.respond(embed=errorEmbed(ctx.user, f"You can't create an account because you're banned from using OnlineClicker. Reason: `{banned[0][0]}`"), ephemeral=True)
+        await ctx.respond(embed=errorEmbed(ctx.user, f"You can't create an account because you're banned from connecting to the server. Reason: `{banned[0][0]}`"), ephemeral=True)
     elif len(registered_for_this_discord_account) != 0:
-        await ctx.respond(embed=errorEmbed(ctx.user, "You can have a maximum of one OnlineClicker account. If you want to change something, use the command `/manage`."), ephemeral=True)
+        await ctx.respond(embed=errorEmbed(ctx.user, "You can have a maximum of one account. If you want to change something, use the command `/manage`."), ephemeral=True)
     elif len(is_already_registered) != 0:
         await ctx.respond(embed=errorEmbed(ctx.user, "An account with this username has already been registered. Please choose another one!"), ephemeral=True)
     elif not username.replace(".", "").replace("-", "").replace("_", "").isalnum():
         await ctx.respond(embed=errorEmbed(ctx.user, "Your username must be alphanumeric (must contain only letters and numbers). Dashes (-), dots (.) and underscores (_) **are allowed**!"), ephemeral=True)
     else:
-        pass_hash = generate_hash(password).decode("utf-8")
-
-        await execDB(f"INSERT INTO {players_column} VALUES (%s, %s, %s, %s)", (ctx.user.id, username, pass_hash, randint(0, len(colors)-1)))
+        await add_user(ctx.user, username, password)
         await ctx.respond(embed=successEmbed(ctx.user, "Your account was successfully created!"), ephemeral=True)
 
 @bot.slash_command(description="Manages your account.")
@@ -189,7 +204,7 @@ async def manage(ctx: discord.ApplicationContext):
     registered_for_this_discord_account = await execDB(f"SELECT username FROM {players_column} WHERE discord_id=%s", (ctx.user.id, ))
 
     if len(registered_for_this_discord_account) == 0:
-        await ctx.respond(embed=errorEmbed(ctx.user, "You haven't registered an OnlineClicker account. Use the command `/register` to make one!"), ephemeral=True)
+        await ctx.respond(embed=errorEmbed(ctx.user, "You haven't registered an account. Use the command `/register` to make one!"), ephemeral=True)
     else:
         username = registered_for_this_discord_account[0][0]
 
@@ -322,7 +337,7 @@ async def manage(ctx: discord.ApplicationContext):
                                 await interaction.response.send_message(errorEmbed(interaction.user, "You can't interact with this."), ephemeral=True)
 
                             else:
-                                await delete_user(interaction.user.id)
+                                await delete_user(interaction.guild, interaction.user)
                                 await Msg.val.delete()
                                 await interaction.response.send_message(embed=successEmbed(interaction.user, "Your account has successfully been deleted."), ephemeral=True)
 
@@ -375,25 +390,25 @@ async def get_discord_user_game_info(ctx: discord.ApplicationContext, username: 
             color=discord.Colour.teal() 
         ))
 
-@bot.slash_command(description="Bans a user from using OnlineClicker.")
+@bot.slash_command(description="Bans a user from connecting to the server.")
 async def ban_service(ctx: discord.ApplicationContext, user: discord.Option(discord.User, "The user you want to ban"), reason: discord.Option(str, "The reason for banning the user", max_length=255)): # type: ignore
-    user = user if isinstance(user, int) else user.id
+    user_id = user if isinstance(user, int) else user.id
 
     if not isModerator(ctx.user):
         await ctx.respond(embed=errorEmbed(ctx.user, "You can't interact with this."), ephemeral=True)
 
     else:
-        is_banned = await execDB("SELECT reason FROM bans WHERE discord_id=%s", (user, ))
+        is_banned = await execDB("SELECT reason FROM bans WHERE discord_id=%s", (user_id, ))
 
         if len(is_banned) != 0:
             await ctx.respond(embed=errorEmbed(ctx.user, f"This user has already been banned.\nReason: `{is_banned[0][0]}`"), ephemeral=True)
         else:
-            await execDB("INSERT INTO bans VALUES (%s, %s);", (user, reason))
-            await execDB("INSERT IGNORE INTO logs(executor, target, action, note) VALUES (%s, %s, %s, %s);", (ctx.user.id, user, "ban", reason))
-            await delete_user(user)
-            await ctx.respond(embed=successEmbed(ctx.user, f"The user has successfully been banned from using OnlineClicker.\nReason: `{reason}`"))
+            await execDB("INSERT INTO bans VALUES (%s, %s);", (user_id, reason))
+            await execDB("INSERT IGNORE INTO logs(executor, target, action, note) VALUES (%s, %s, %s, %s);", (ctx.user.id, user_id, "ban", reason))
+            await delete_user(ctx.guild, user_id)
+            await ctx.respond(embed=successEmbed(ctx.user, f"The user has successfully been banned from connecting to the server.\nReason: `{reason}`"))
 
-@bot.slash_command(description="Unbans a user from using OnlineClicker.")
+@bot.slash_command(description="Unbans a user from connecting to the server.")
 async def unban_service(ctx: discord.ApplicationContext, user: discord.Option(discord.User, "The user you want to unban"), reason: discord.Option(str, "The reason for unbanning the user", max_length=255)): # type: ignore
     user = user if isinstance(user, int) else user.id
 
@@ -408,5 +423,4 @@ async def unban_service(ctx: discord.ApplicationContext, user: discord.Option(di
         else:
             await execDB("DELETE FROM bans WHERE discord_id=%s;", (user, ))
             await execDB("INSERT IGNORE INTO logs(executor, target, action, note) VALUES (%s, %s, %s, %s);", (ctx.user.id, user, "unban", reason))
-            await delete_user(user)
-            await ctx.respond(embed=successEmbed(ctx.user, f"The user has successfully been unbanned from using OnlineClicker.\nReason: `{reason}`"))
+            await ctx.respond(embed=successEmbed(ctx.user, f"The user has successfully been unbanned from connecting to the server.\nReason: `{reason}`"))
