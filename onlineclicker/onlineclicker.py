@@ -10,7 +10,6 @@ License MIT, see LICENSE for more details.
 """
 
 # WELCOME TO THE ONLINECLICKER SERVER BASE CODE
-# This is the only script that will be updated!
 #
 # Take a look, but try not to break anything.
 # Want to suggest something? Contact me (glitchedlime) on our Discord (https://discord.gg/StJxMSc8kM)!
