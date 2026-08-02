@@ -76,7 +76,7 @@ def _get_ini_value(section, value, _type=None):
 _DB_TYPE = _get_ini_value("Global", "DB_TYPE") if _get_ini_value("Global", "DB_TYPE") != None else "SQLite3"
 _PLAYERS_COLUMN = "test_players" if _testing else "players" # don't mind this - testing purposes
 _CURRENT_VERSION = "1.0.6" # this is a mod client version
-_PORT = _get_ini_value("Server", "PORT", int)
+_PORT = _get_ini_value("Server", "PORT", int) if _get_ini_value("Server", "PORT", int) != None else 24588
 _SERVER_NAME = _get_ini_value("Server", "SERVER_NAME") if _get_ini_value("Server", "SERVER_NAME") != None else "OnlineClicker Server"
 _OWNERS = [(int(owner.strip()) if owner.strip().isnumeric() else owner.strip()) for owner in _get_ini_value("Server", "OWNERS").split(',')] if _get_ini_value("Server", "OWNERS") != None else []
 _MODERATORS = [(int(mod.strip()) if mod.strip().isnumeric() else mod.strip()) for mod in _get_ini_value("Server", "MODERATORS").split(',')] if _get_ini_value("Server", "MODERATORS") != None else []
