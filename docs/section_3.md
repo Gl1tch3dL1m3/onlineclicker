@@ -13,7 +13,7 @@ async def on_server_ready():
 
 @server.event
 async def on_player_connect(player: Player):
-    print(player.name + " just connected to the server!")
+    print(player.username + " just connected to the server!")
 
 server.initialize()
 ```
