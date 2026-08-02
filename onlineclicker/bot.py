@@ -89,7 +89,7 @@ def isModerator(member: discord.Member):
 
 def errorEmbed(author: discord.User, description: str, title: str = "Error!"):
     return discord.Embed(
-        author=discord.EmbedAuthor(name=author.name, icon_url=author.avatar.url),
+        author=discord.EmbedAuthor(name=author.name, icon_url=author.display_avatar.url),
         title=title + " :x:",
         description=description,
         color=discord.Color.red()
@@ -97,7 +97,7 @@ def errorEmbed(author: discord.User, description: str, title: str = "Error!"):
 
 def successEmbed(author: discord.User, description: str, title: str = "Success!"):
     return discord.Embed(
-        author=discord.EmbedAuthor(name=author.name, icon_url=author.avatar.url),
+        author=discord.EmbedAuthor(name=author.name, icon_url=author.display_avatar.url),
         title=title + " :white_check_mark:",
         description=description,
         color=discord.Color.green()
@@ -291,7 +291,7 @@ async def manage(ctx: discord.ApplicationContext):
                                 await interaction.response.send_message(embed=successEmbed(interaction.user, "Your chat color has successfully been changed."), ephemeral=True)
 
                     await interaction.response.send_message(embed=discord.Embed(
-                        author=discord.EmbedAuthor(name=interaction.user.name, icon_url=interaction.user.avatar.url),
+                        author=discord.EmbedAuthor(name=interaction.user.name, icon_url=interaction.user.display_avatar.url),
                         title="Choose a chat nickname color! :art:",
                         description="Now you can choose the color of the nickname you want in the chat by using the select menu!",
                         color=discord.Color.teal()
@@ -342,7 +342,7 @@ async def manage(ctx: discord.ApplicationContext):
                     Msg.val = await Msg.val.original_response()
 
         await ctx.respond(embed=discord.Embed(
-            author=discord.EmbedAuthor(name=ctx.user.name, icon_url=ctx.user.avatar.url),
+            author=discord.EmbedAuthor(name=ctx.user.name, icon_url=ctx.user.display_avatar.url),
             title="Account Manager :gear:",
             description=f"Here you can manage your account by clicking one of the buttons below!\n\nYour username is: `{username}`\nYour password is hidden for security reasons. If you forgot it, please change it.",
             color=discord.Color.teal()
