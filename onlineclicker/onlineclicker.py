@@ -79,7 +79,7 @@ def _get_ini_value(section, value, _type=None):
 
 _DB_TYPE = _get_ini_value("Global", "DB_TYPE") if _get_ini_value("Global", "DB_TYPE") != None else "SQLite3"
 _PLAYERS_COLUMN = "test_players" if _testing else "players" # don't mind this - testing purposes
-_CURRENT_VERSION = "1.6" # this is a mod client version
+_CURRENT_VERSION = "1.6.1" # this is a mod client version
 _SERVER_VERSION = "1.1"
 _PORT = _get_ini_value("Server", "PORT", int)
 _SERVER_NAME = _get_ini_value("Server", "SERVER_NAME") if _get_ini_value("Server", "SERVER_NAME") != None else "OnlineClicker Server"
@@ -996,7 +996,6 @@ class Server(Base):
 
         for player in self.all_players.copy().values():
             if compare_usernames(username, player.username):
-                print("val", player)
                 if remove_sensitive:
                     return player.safe()
                 else:
