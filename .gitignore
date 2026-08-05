@@ -1,8 +1,8 @@
 __pycache__/
-cogs/
-temp/
+custom/*
 config/config.ini
 config/.env
 sqlite3.db
 logs/*
 server.py
+todo.md

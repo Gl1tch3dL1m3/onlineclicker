@@ -1,0 +1,16 @@
+v1.1 (client: v1.6)
+- Added `custom/` folder for you to save your files here. This folder will never be edited by any update.
+- Added `compare_usernames()` and `is_player_in_list()`.
+- Added `CHATBOT_USERNAMES` and `LOCALHOST` to `config.ini`.
+- Added `Server.chatbot_usernames` and `Server.localhost`.
+- Added `ChatBot` class. (Create chatbots using `Server.create_chatbot()`)
+- Added `Server.create_chatbot()`, `Player.move()` and `Player.change_status()`.
+- Renamed `Server.send_chat()` to `Server.send_message()`.
+- Server now shows the server version and supported client version.
+- Fixed incorrect class printing.
+- Fixed `get_players_in_*()` functions returning JSON and not `Player` objects.
+- Fixed bugs related to username checking.
+- Fixed config.ini returning True for all booleans.
+- Fixed other minor issues.
+
+- Changed versioning from 1.x.x to 1.x (1.x.x will be used in very small updates such as bugfixes)

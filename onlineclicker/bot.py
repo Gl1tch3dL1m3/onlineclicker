@@ -6,7 +6,6 @@ import bcrypt
 import datetime
 import configparser
 from random import randint
-from discord.ext import commands
 from dotenv import load_dotenv
 from asyncio import sleep
 from os import getenv
@@ -37,12 +36,26 @@ DB_TYPE = _get_ini_value("Global", "DB_TYPE") if _get_ini_value("Global", "DB_TY
 MODROLES = [int(role.strip()) for role in _get_ini_value("Discord", "MODROLES").split(",") if role != ""] if _get_ini_value("Discord", "MODROLES") != None else []
 SERVER_ID = _get_ini_value("Discord", "DISCORD_SERVER_ID", int)
 REGISTERED_ROLE_ID = _get_ini_value("Discord", "REGISTERED_ROLE_ID", int)
+_CHATBOT_USERNAMES = [chatbot.strip() for chatbot in _get_ini_value("Global", "CHATBOT_USERNAMES").split(',')] if _get_ini_value("Global", "CHATBOT_USERNAMES") != None else []
+_CHATBOT_LOWER_USERNAMES = [chatbot.lower() for chatbot in _CHATBOT_USERNAMES]
+
 username_change_cooldowns = {}
 
 # { "table_name": [ row1, row2, ... ], ... }
 # db_cache = {}
 
 async def execDB(mysql: str, vars: tuple = None, sqlite: str = None) -> list:
+    """Executes an SQL query on DB. This function is a coroutine.
+
+    Parameters:
+        mysql (str): MySQL query to execute.
+        vars (tuple): *Optional.* Adds variables to SQL query to escape user input.
+        sqlite (str): *Optional.* SQLite query to execute.
+
+    Returns:
+        list: A list of selected items. If there are none, it returns an empty list.
+    """
+
     selected = []
 
     if DB_TYPE == "MySQL":
@@ -61,12 +74,12 @@ async def execDB(mysql: str, vars: tuple = None, sqlite: str = None) -> list:
     elif DB_TYPE == "SQLite":
         async with aiosqlite.connect("sqlite3.db") as db:
             mysql = mysql.replace("%s", "?")
-            sqlite = sqlglot.transpile(mysql, "mysql", "sqlite")[0] if sqlite == None else sqlite
+            query = sqlglot.transpile(mysql, "mysql", "sqlite")[0] if sqlite == None else sqlite
 
             if vars != "" and vars != None:
-                cur = await db.execute(sqlglot.transpile(sqlite, "mysql", "sqlite")[0], vars)
+                cur = await db.execute(query, vars)
             else:
-                cur = await db.execute(sqlglot.transpile(sqlite, "mysql", "sqlite")[0])
+                cur = await db.execute(query)
             
             rows = await cur.fetchall()
 
@@ -146,11 +159,25 @@ async def on_ready():
 
     guild = bot.get_guild(SERVER_ID)
     role = guild.get_role(REGISTERED_ROLE_ID)
-    registered_users = await execDB("SELECT discord_id FROM players")
+    registered_users = await execDB(f"SELECT discord_id, username FROM {players_column}")
     
     for member in guild.members:
-        if [member.id] in registered_users and role not in member.roles:
-            await member.add_roles(role)
+        for reg_user in registered_users:
+            if member.id == reg_user[0]:
+                # If member doesn't have the "registered" role
+                if role not in member.roles:
+                    await member.add_roles(role)
+
+                # If the player username belongs to a chatbot
+                if reg_user[1].lower() in _CHATBOT_LOWER_USERNAMES:
+                    unnamed_players = await execDB(f"SELECT username FROM {players_column} WHERE username LIKE '%Unnamed'")
+                    unnamed_username = "unnamed"
+                    num = 0
+
+                    while unnamed_username + str(num) in unnamed_players:
+                        num += 1
+
+                    await execDB(f"UPDATE {players_column} SET username=%s WHERE discord_id=%s", (unnamed_username + str(num), member.id))
 
     # DB caching but it's probably useless because the DB probably won't be big
     # If this changes, I'll implement caching
@@ -195,6 +222,8 @@ async def register(ctx: discord.ApplicationContext, username: discord.Option(str
         await ctx.respond(embed=errorEmbed(ctx.user, "An account with this username has already been registered. Please choose another one!"), ephemeral=True)
     elif not username.replace(".", "").replace("-", "").replace("_", "").isalnum():
         await ctx.respond(embed=errorEmbed(ctx.user, "Your username must be alphanumeric (must contain only letters and numbers). Dashes (-), dots (.) and underscores (_) **are allowed**!"), ephemeral=True)
+    elif username.lower() in _CHATBOT_LOWER_USERNAMES:
+        await ctx.respond(embed=errorEmbed(ctx.user, "This username is used by one of our chatbots. Please use a different one!"), ephemeral=True)
     else:
         await add_user(ctx.user, username, password)
         await ctx.respond(embed=successEmbed(ctx.user, "Your account was successfully created!"), ephemeral=True)
@@ -206,16 +235,16 @@ async def manage(ctx: discord.ApplicationContext):
     if len(registered_for_this_discord_account) == 0:
         await ctx.respond(embed=errorEmbed(ctx.user, "You haven't registered an account. Use the command `/register` to make one!"), ephemeral=True)
     else:
-        username = registered_for_this_discord_account[0][0]
+        registered_username = registered_for_this_discord_account[0][0]
 
         class ManageView(discord.ui.View):
             @discord.ui.button(
                 label="Change Username",
                 style=discord.ButtonStyle.gray,
-                emoji=":pencil:"
+                emoji="📝"
             )
 
-            async def change_username(self, button: discord.Button, interaction: discord.Interaction):
+            async def change_username_button(self, button: discord.Button, interaction: discord.Interaction):
                 if interaction.user.id != ctx.user.id:
                     await interaction.response.send_message(errorEmbed(interaction.user, "You can't interact with this."), ephemeral=True)
 
@@ -224,23 +253,29 @@ async def manage(ctx: discord.ApplicationContext):
                         def __init__(self, *args, **kwargs) -> None:
                             super().__init__(*args, **kwargs)
 
-                            self.add_item(discord.ui.InputText(label="New username", max_length=50, min_length=1))
+                            self.add_item(discord.ui.InputText(label="New username:", max_length=50, min_length=1))
 
                         async def callback(self, interaction: discord.Interaction):
                             if interaction.user.id in username_change_cooldowns and datetime.datetime.now() - username_change_cooldowns[interaction.user.id] < datetime.timedelta(days=1):
                                 await interaction.response.send_message(embed=errorEmbed(ctx.user, "You can change your username again after 1 day. Please wait!"), ephemeral=True)
                                 return
 
-                            is_already_registered = await execDB(f"SELECT username FROM {players_column} WHERE LOWER(username)=%s", (self.children[0].value.lower(), ))
+                            username = self.children[0].value
+                            is_already_registered = await execDB(f"SELECT username FROM {players_column} WHERE LOWER(username)=%s", (username.lower(), ))
 
+                            if registered_username.lower() == username.lower():
+                                await interaction.response.send_message(embed=errorEmbed(ctx.user, "You can't change your username to your current username. Note that case doesn't matter."), ephemeral=True)
+                                return
                             if len(is_already_registered) != 0:
                                 await interaction.response.send_message(embed=errorEmbed(ctx.user, "An account with this username has already been registered. Please choose another one!"), ephemeral=True)
                                 return
-                            
                             elif not username.replace(".", "").replace("-", "").replace("_", "").isalnum():
                                 await interaction.response.send_message(embed=errorEmbed(ctx.user, "Your username must be alphanumeric (must contain only letters and numbers). Dashes (-), dots (.) and underscores (_) **are allowed**!"), ephemeral=True)
                                 return
-                            
+                            elif username.lower() in _CHATBOT_LOWER_USERNAMES:
+                                await interaction.response(embed=errorEmbed(ctx.user, "This username is used by one of our chatbots. Please use a different one!"), ephemeral=True)
+                                return
+
                             old_username = await execDB(f"SELECT username FROM {players_column} WHERE discord_id=%s", (interaction.user.id, ))
 
                             await execDB(f"UPDATE {players_column} SET username=%s WHERE discord_id=%s;", (self.children[0].value, interaction.user.id))
@@ -253,10 +288,10 @@ async def manage(ctx: discord.ApplicationContext):
             @discord.ui.button(
                 label="Change Password",
                 style=discord.ButtonStyle.gray,
-                emoji=":pencil:"
+                emoji="📝"
             )
 
-            async def change_password(self, button: discord.Button, interaction: discord.Interaction):
+            async def change_password_button(self, button: discord.Button, interaction: discord.Interaction):
                 if interaction.user.id != ctx.user.id:
                     await interaction.response.send_message(errorEmbed(interaction.user, "You can't interact with this."), ephemeral=True)
 
@@ -265,7 +300,7 @@ async def manage(ctx: discord.ApplicationContext):
                         def __init__(self, *args, **kwargs) -> None:
                             super().__init__(*args, **kwargs)
 
-                            self.add_item(discord.ui.InputText(label="New password (min. 8 characters)", max_length=50, min_length=8))
+                            self.add_item(discord.ui.InputText(label="New password:", max_length=50, min_length=8))
 
                         async def callback(self, interaction: discord.Interaction):
                             pass_hash = generate_hash(self.children[0].value).decode("utf-8")
@@ -277,10 +312,10 @@ async def manage(ctx: discord.ApplicationContext):
             @discord.ui.button(
                 label="Change Nickname Color",
                 style=discord.ButtonStyle.gray,
-                emoji=":art:"
+                emoji="🎨"
             )
 
-            async def change_nickname_color(self, button: discord.Button, interaction: discord.Interaction):
+            async def change_nickname_color_button(self, button: discord.Button, interaction: discord.Interaction):
                 if interaction.user.id != ctx.user.id:
                     await interaction.response.send_message(errorEmbed(interaction.user, "You can't interact with this."), ephemeral=True)
 
@@ -315,10 +350,10 @@ async def manage(ctx: discord.ApplicationContext):
             @discord.ui.button(
                 label="Delete Account",
                 style=discord.ButtonStyle.danger,
-                emoji=":wastebasket:"
+                emoji="🗑️"
             )
 
-            async def delete_account(self, button: discord.Button, interaction: discord.Interaction):
+            async def delete_account_button(self, button: discord.Button, interaction: discord.Interaction):
                 if interaction.user.id != ctx.user.id:
                     await interaction.response.send_message(errorEmbed(interaction.user, "You can't interact with this."), ephemeral=True)
 
@@ -359,7 +394,7 @@ async def manage(ctx: discord.ApplicationContext):
         await ctx.respond(embed=discord.Embed(
             author=discord.EmbedAuthor(name=ctx.user.name, icon_url=ctx.user.display_avatar.url),
             title="Account Manager :gear:",
-            description=f"Here you can manage your account by clicking one of the buttons below!\n\nYour username is: `{username}`\nYour password is hidden for security reasons. If you forgot it, please change it.",
+            description=f"Here you can manage your account by clicking one of the buttons below!\n\nYour username is: `{registered_username}`\nYour password is hidden for security reasons. If you forgot it, please change it.",
             color=discord.Color.teal()
         ), view=ManageView(), ephemeral=True)
 
