@@ -1248,13 +1248,6 @@ class Server(Base):
                         allowed_to_move = await _call_registered_function(self.__registered_events, "on_process_player_move", player, position)
                         
                         if allowed_to_move == None or allowed_to_move:
-                            """
-                            current_position_x = float(json_req["current_position"].split(" ")[0])
-                            player._position=position
-                            player._flip=current_position_x < position.x
-                            
-                            await self.broadcast_to_node(player.node, {"request": "move", "position": json_req["position"], "flip": json_req["flip"]}, sender_websocket=websocket)
-                            """
                             await player.move(position, float(json_req["current_position"].split(" ")[0]) < position.x)
                             await _call_registered_function(self.__registered_events, "on_player_move", player, position)
 
@@ -1301,10 +1294,6 @@ class Server(Base):
                         allowed_to_change_status = await _call_registered_function(self.__registered_events, "on_process_player_status_update", player, old_status, new_status)
                         
                         if allowed_to_change_status == None or allowed_to_change_status:
-                            """
-                            player._status = new_status
-                            await self.broadcast_to_node(player.node, {"request": "status", "value": value}, sender_websocket=websocket)
-                            """
                             await player.change_status(new_status)
                             await _call_registered_function(self.__registered_events, "on_player_status_update", player, old_status, new_status)
         
