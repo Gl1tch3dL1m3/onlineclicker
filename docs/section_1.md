@@ -56,7 +56,7 @@ Server scripts require certain Python libraries that are necessary for the serve
 
 To install all the libraries (Windows):
 1. Open your server folder and find `requirements.txt` file.
-2. In the file explorer window, type `cmd` in the path bar (next to the search bar) and press ENTER. This will open a terminal.
+2. In the file explorer, type `cmd` in the path bar (next to the search bar) and press ENTER. This will open a terminal.
 3. In the command prompt, type `pip install -r requirements.txt`. This will install all libraries needed for the server to run.
 4. Close the command prompt.
 
