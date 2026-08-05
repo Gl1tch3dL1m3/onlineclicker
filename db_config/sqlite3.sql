@@ -26,11 +26,3 @@ CREATE TABLE IF NOT EXISTS "players" (
   "nickname_color" INTEGER DEFAULT NULL,
   PRIMARY KEY ("discord_id")
 );
-
-CREATE TABLE IF NOT EXISTS "test_players" (
-  "discord_id" INTEGER NOT NULL,
-  "username" TEXT NOT NULL,
-  "password" TEXT DEFAULT NULL,
-  "nickname_color" INTEGER DEFAULT NULL,
-  PRIMARY KEY ("discord_id")
-);
