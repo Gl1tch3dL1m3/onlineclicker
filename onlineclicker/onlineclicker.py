@@ -78,7 +78,7 @@ def _get_ini_value(section, value, _type=None):
 
 _DB_TYPE = _get_ini_value("Global", "DB_TYPE") if _get_ini_value("Global", "DB_TYPE") != None else "SQLite3"
 _PLAYERS_COLUMN = "test_players" if _testing else "players" # don't mind this - testing purposes
-_CURRENT_VERSION = "1.6" # this is a mod client version
+_CLIENT_VERSION = "1.0.6" # this is a mod client version
 _SERVER_VERSION = "1.1"
 _PORT = _get_ini_value("Server", "PORT", int) if _get_ini_value("Server", "PORT", int) != None else 24588
 _SERVER_NAME = _get_ini_value("Server", "SERVER_NAME") if _get_ini_value("Server", "SERVER_NAME") != None else "OnlineClicker Server"
@@ -318,7 +318,7 @@ class ClientErrorMessage(str, Enum):
     """Represents a "missing 'request' JSON value" exception."""
     WRONG_USERNAME_OR_PASSWORD: str = "Wrong username or password. If you forgot to log in, please enter your account details in the \"Account\" section."
     """Represents a "wrong username or password" exception."""
-    OUTDATED_CLIENT: str = f"Your version of OnlineClicker is outdated. To join the server, update to the newest version (<b><strong>v{_CURRENT_VERSION}</strong></b>)!"
+    OUTDATED_CLIENT: str = f"Your version of OnlineClicker is outdated. To join the server, update to the newest version (<b><strong>v{_CLIENT_VERSION}</strong></b>)!"
     """Represents an "outdated client" exception."""
     ALREADY_LOGGED_IN: str = "You're already logged in to the server."
     """Represents an "already logged in" exception."""
@@ -853,7 +853,7 @@ class Server(Base):
         else:
             os.system('clear')
 
-        print(Fore.CYAN + self.name + " (v" + _SERVER_VERSION + ") (client: v" + _CURRENT_VERSION + ")" + Fore.BLACK + Back.WHITE + "\nServer logs can be found in the \"logs/terminal_out.log\" file!" + Back.BLUE + "\nIf you have any questions, join our Discord: https://discord.gg/StJxMSc8kM" + Fore.RESET + Back.RESET)
+        print(Fore.CYAN + self.name + " (v" + _SERVER_VERSION + ") (client: v" + _CLIENT_VERSION + ")" + Fore.BLACK + Back.WHITE + "\nServer logs can be found in the \"logs/terminal_out.log\" file!" + Back.BLUE + "\nIf you have any questions, join our Discord: https://discord.gg/StJxMSc8kM" + Fore.RESET + Back.RESET)
         asyncio.run(self.__main(discord_bot))
 
     def create_chatbot(self, username_index: str = 0, badges: list[Badge] = [], nickname_color: NicknameColor = NicknameColor.RED) -> ChatBot:
@@ -1170,7 +1170,7 @@ class Server(Base):
                             await _call_registered_function(self.__registered_events, "on_client_error", websocket, ClientErrorMessage.WRONG_USERNAME_OR_PASSWORD, True)
                             return
                         
-                        elif json_req["version"] != _CURRENT_VERSION:
+                        elif json_req["version"] != _CLIENT_VERSION:
                             await websocket.send(json.dumps({"reply": "login", "status_code": 400, "message": ClientErrorMessage.OUTDATED_CLIENT}))
                             await _call_registered_function(self.__registered_events, "on_client_error", websocket, ClientErrorMessage.OUTDATED_CLIENT, True)
                             return
@@ -1298,6 +1298,9 @@ class Server(Base):
                             await _call_registered_function(self.__registered_events, "on_player_status_update", player, old_status, new_status)
         
         except websockets.exceptions.InvalidMessage:
+            pass
+
+        except websockets.exceptions.ConnectionClosedError:
             pass
 
         except Exception:
