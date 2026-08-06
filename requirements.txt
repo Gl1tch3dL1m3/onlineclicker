@@ -4,7 +4,6 @@ aiosqlite
 no_profanity
 dotenv
 py-cord
-captcha
 bcrypt
 colorama
 jsonschema
