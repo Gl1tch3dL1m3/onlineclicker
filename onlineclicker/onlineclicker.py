@@ -15,6 +15,7 @@ License MIT, see LICENSE for more details.
 # Want to suggest something? Contact me (glitchedlime) on our Discord (https://discord.gg/StJxMSc8kM)!
 
 from __future__ import annotations
+from typing import Any
 from sys import modules
 
 if "pdoc" not in modules:
@@ -26,11 +27,12 @@ from colorama import Fore, Back
 from dotenv import load_dotenv
 from enum import Enum
 import os
+import ssl
 import json
 import asyncio
-import aiomysql
+#import aiomysql
 import aiosqlite
-import sqlglot
+#import sqlglot
 import websockets
 import datetime
 import no_profanity # this is actually my library; it works well but it's unfinished; I'll finish it someday for sure (adding more words and changing the detection system a lil bit) :)
@@ -64,44 +66,55 @@ _config = configparser.ConfigParser(allow_no_value=True)
 _config.read("./config/config.ini")
 load_dotenv("./config/.env")
 
-def _get_ini_value(section, value, _type=None):
-    try:
-        value = _config.get(section, value)
-        if _type == bool:
-            value = eval(value.capitalize())
-        elif _type != None:
-            value = _type(value)
+def get_ini_value(section: str, variable: str, _type=None) -> Any | None:
+    """Returns a value from variable in `config.ini`. If the value was not found, it returns None.
+    
+    Parameters:
+        section (str): Section of the variable you want to get the value from.
+        variable (str): Name of the varaible you want to get the value from.
+        _type: *Optional.* Datatype in which the value should be returned. (example: int, str)
 
-        return value
+    Examples:
+        >>> server_name = get_ini_value("Server", "SERVER_NAME")
+        >>> max_in_lobby = get_ini_value("Server", "MAX_IN_LOBBY", int)
+    """
+
+    try:
+        variable = _config.get(section, variable)
+        if _type == bool:
+            variable = eval(variable.capitalize())
+        elif _type != None:
+            variable = _type(variable)
+
+        return variable
     except:
         return None
 
-_DB_TYPE = _get_ini_value("Global", "DB_TYPE") if _get_ini_value("Global", "DB_TYPE") != None else "SQLite3"
+#_DB_TYPE = get_ini_value("Global", "DB_TYPE") if get_ini_value("Global", "DB_TYPE") != None else "SQLite3"
 _PLAYERS_COLUMN = "test_players" if _testing else "players" # don't mind this - testing purposes
-_CLIENT_VERSION = "1.0.6" # this is a mod client version
+_CLIENT_VERSION = "1.6.1" # this is a mod client version
 _SERVER_VERSION = "1.1"
-_PORT = _get_ini_value("Server", "PORT", int) if _get_ini_value("Server", "PORT", int) != None else 24588
-_SERVER_NAME = _get_ini_value("Server", "SERVER_NAME") if _get_ini_value("Server", "SERVER_NAME") != None else "OnlineClicker Server"
-_OWNERS = [(int(owner.strip()) if owner.strip().isnumeric() else owner.strip()) for owner in _get_ini_value("Server", "OWNERS").split(',')] if _get_ini_value("Server", "OWNERS") != None else []
-_MODERATORS = [(int(mod.strip()) if mod.strip().isnumeric() else mod.strip()) for mod in _get_ini_value("Server", "MODERATORS").split(',')] if _get_ini_value("Server", "MODERATORS") != None else []
-_SUPPORTERS = [(int(supporter.strip()) if supporter.strip().isnumeric() else supporter.strip()) for supporter in _get_ini_value("Server", "SUPPORTERS").split(',')] if _get_ini_value("Server", "SUPPORTERS") != None else []
-_VERIFIED = [(int(verified.strip()) if verified.strip().isnumeric() else verified.strip()) for verified in _get_ini_value("Server", "VERIFIED").split(',')] if _get_ini_value("Server", "VERIFIED") != None else []
-_NODE_LIMIT = _get_ini_value("Server", "MAX_IN_LOBBY", int)
-_MAX_PLAYERS = _get_ini_value("Server", "MAX_PLAYERS", int)
-_LOG_MESSAGES = _get_ini_value("Server", "LOG_MESSAGES", bool)
-_CHATBOT_USERNAMES = [chatbot.strip() for chatbot in _get_ini_value("Global", "CHATBOT_USERNAMES").split(',')] if _get_ini_value("Global", "CHATBOT_USERNAMES") != None else []
-_LOCALHOST = _get_ini_value("Server", "LOCALHOST", bool) if _get_ini_value("Server", "LOCALHOST", bool) != None else False
+_PORT = get_ini_value("Server", "PORT", int) if get_ini_value("Server", "PORT", int) != None else 24588
+_SERVER_NAME = get_ini_value("Server", "SERVER_NAME") if get_ini_value("Server", "SERVER_NAME") != None else "OnlineClicker Server"
+_OWNERS = [(int(owner.strip()) if owner.strip().isnumeric() else owner.strip()) for owner in get_ini_value("Server", "OWNERS").split(',')] if get_ini_value("Server", "OWNERS") != None else []
+_MODERATORS = [(int(mod.strip()) if mod.strip().isnumeric() else mod.strip()) for mod in get_ini_value("Server", "MODERATORS").split(',')] if get_ini_value("Server", "MODERATORS") != None else []
+_SUPPORTERS = [(int(supporter.strip()) if supporter.strip().isnumeric() else supporter.strip()) for supporter in get_ini_value("Server", "SUPPORTERS").split(',')] if get_ini_value("Server", "SUPPORTERS") != None else []
+_VERIFIED = [(int(verified.strip()) if verified.strip().isnumeric() else verified.strip()) for verified in get_ini_value("Server", "VERIFIED").split(',')] if get_ini_value("Server", "VERIFIED") != None else []
+_NODE_LIMIT = get_ini_value("Server", "MAX_IN_LOBBY", int)
+_MAX_PLAYERS = get_ini_value("Server", "MAX_PLAYERS", int)
+_LOG_MESSAGES = get_ini_value("Server", "LOG_MESSAGES", bool)
+_CHATBOT_USERNAMES = [chatbot.strip() for chatbot in get_ini_value("Global", "CHATBOT_USERNAMES").split(',')] if get_ini_value("Global", "CHATBOT_USERNAMES") != None else []
+_LOCALHOST = get_ini_value("Server", "LOCALHOST", bool) if get_ini_value("Server", "LOCALHOST", bool) != None else False
 
 _profanity_filter = no_profanity.ProfanityFilter()
 _pool = None
 
-async def execDB(mysql: str, vars: tuple = None, sqlite: str = None) -> list:
+async def execDB(query: str, vars: tuple = None) -> list:
     """Executes an SQL query on DB. This function is a coroutine.
 
     Parameters:
-        mysql (str): MySQL query to execute.
+        query (str): SQLite query to execute.
         vars (tuple): *Optional.* Adds variables to SQL query to escape user input.
-        sqlite (str): *Optional.* SQLite query to execute.
 
     Returns:
         list: A list of selected items. If there are none, it returns an empty list.
@@ -109,35 +122,32 @@ async def execDB(mysql: str, vars: tuple = None, sqlite: str = None) -> list:
 
     selected = []
 
-    if _DB_TYPE == "MySQL":
-        async with _pool.acquire() as con:
-            async with con.cursor() as cur:
-                if vars != "" and vars != None:
-                    await cur.execute(mysql, vars)
-                else:
-                    await cur.execute(mysql)
+    #if _DB_TYPE == "MySQL":
+        #async with _pool.acquire() as con:
+            #async with con.cursor() as cur:
+                #if vars != "" and vars != None:
+                    #await cur.execute(mysql, vars)
+                #else:
+                    #await cur.execute(mysql)
 
-                rows = await cur.fetchall()
+                #rows = await cur.fetchall()
 
-                for row in rows:
-                    selected.append(list(row))
+                #for row in rows:
+                    #selected.append(list(row))
 
-    elif _DB_TYPE == "SQLite":
-        async with aiosqlite.connect("sqlite3.db") as db:
-            mysql = mysql.replace("%s", "?")
-            query = sqlglot.transpile(mysql, "mysql", "sqlite")[0] if sqlite == None else sqlite
-
-            if vars != "" and vars != None:
-                cur = await db.execute(query, vars)
-            else:
-                cur = await db.execute(query)
+    #elif _DB_TYPE == "SQLite":
+    async with aiosqlite.connect("sqlite3.db") as db:
+        if vars != "" and vars != None:
+            cur = await db.execute(query, vars)
+        else:
+            cur = await db.execute(query)
             
-            rows = await cur.fetchall()
+        rows = await cur.fetchall()
 
-            for row in rows:
-                selected.append(list(row))
-            else:
-                await db.commit()
+        for row in rows:
+            selected.append(list(row))
+        else:
+            await db.commit()
 
     return selected
 
@@ -763,10 +773,10 @@ class Server(Base):
             node_limit (int): The maximum number of players who can play on one node.
             max_players (int): The maximum number of players that can be connected to the server.
             log_messages (bool): Whether player messages should be logged to DB.
-            owners (list[int | str]): List of server owners' identificators.
-            moderators (list[int | str]): List of server moderators' identificators.
-            supporters (list[int | str]): List of server supporters' identificators.
-            verified (list[int | str]): List of server verified players' identificators.
+            owners (list[int | str]): List of server owners' identificators (Discord user ID or in-game username).
+            moderators (list[int | str]): List of server moderators' identificators (Discord user ID or in-game username).
+            supporters (list[int | str]): List of server supporters' identificators (Discord user ID or in-game username).
+            verified (list[int | str]): List of server verified players' identificators (Discord user ID or in-game username).
             localhost (bool): Whether the server should run on localhost.
         """
         
@@ -810,19 +820,19 @@ class Server(Base):
         return self._log_messages
     @property
     def owners(self) -> list[int | str]:
-        """List of server owners' identificators."""
+        """List of server owners' identificators (Discord user ID or in-game username)."""
         return self._owners
     @property
     def moderators(self) -> list[int | str]:
-        """List of server moderators' identificators."""
+        """List of server moderators' identificators (Discord user ID or in-game username)."""
         return self._moderators
     @property
     def supporters(self) -> list[int | str]:
-        """List of server supporters' identificators."""
+        """List of server supporters' identificators (Discord user ID or in-game username)."""
         return self._supporters
     @property
     def verified(self) -> list[int | str]:
-        """List of server verified players' identificators."""
+        """List of server verified players' identificators (Discord user ID or in-game username)."""
         return self._verified
     @property
     def all_players(self) -> dict[websockets.ServerConnection, Player]:
@@ -841,11 +851,12 @@ class Server(Base):
         """Whether the server should run on localhost."""
         return self._localhost
 
-    def initialize(self, discord_bot: bool = False) -> None:
+    def initialize(self, discord_bot: bool = False, ssl_chain: list[str] = None) -> None:
         """Runs the server. Initializes OnlineClicker server and/or Discord bot at the same time. This method is blocking and should be at the last line of your custom server script.
 
         Parameters:
-            discord_bot (bool): Whether the Discord bot should be launched.
+            discord_bot (bool): *Optional.* Whether the Discord bot should be launched.
+            ssl_chain (list[str]): *Optional.* SSL certification chain. This is a list that contains a path to your certificate (index 0) and a path to your private key (index 1).
         """
 
         if os.name == 'nt':
@@ -854,7 +865,7 @@ class Server(Base):
             os.system('clear')
 
         print(Fore.CYAN + self.name + " (v" + _SERVER_VERSION + ") (client: v" + _CLIENT_VERSION + ")" + Fore.BLACK + Back.WHITE + "\nServer logs can be found in the \"logs/terminal_out.log\" file!" + Back.BLUE + "\nIf you have any questions, join our Discord: https://discord.gg/StJxMSc8kM" + Fore.RESET + Back.RESET)
-        asyncio.run(self.__main(discord_bot))
+        asyncio.run(self.__main(discord_bot, ssl_chain))
 
     def create_chatbot(self, username_index: str = 0, badges: list[Badge] = [], nickname_color: NicknameColor = NicknameColor.RED) -> ChatBot:
         """Creates a chatbot for the server.
@@ -868,7 +879,7 @@ class Server(Base):
             ChatBot: Initialized chatbot.
 
         Raises:
-            ValueError: 
+            ValueError: Username index is out of range. Check if there are enough usernames in Server.chatbot_usernames (or check CHATBOT_USERNAMES in config.ini).
         """
 
         if username_index > len(self.chatbot_usernames)-1:
@@ -1017,7 +1028,7 @@ class Server(Base):
         await self.broadcast_to_node(node, {"request": "chat", "message": escaped, "censored_message": escaped_censored, "badges": message.badges_values, "nickname_color": message.nickname_color.value}, username=message.username)
         
         if self.log_messages and log_message and len(message.content) <= 100:
-            await execDB("INSERT INTO chatlogs(username, message, node) VALUES (%s, %s, %s)", (message.username, message.content, node))
+            await execDB("INSERT INTO chatlogs(username, message, node, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)", (message.username, message.content, node))
 
     async def broadcast_to_node(self, node: str, message: dict, sender_websocket: websockets.ServerConnection = None, username: str = None, send_to_sender: bool = True) -> None:
         """Broadcasts a WebSocket message to a node as player. This method is a coroutine.
@@ -1106,31 +1117,38 @@ class Server(Base):
             await asyncio.sleep(10)
 
     # Main function
-    async def __main(self, discord_bot):
-        if _DB_TYPE == "MySQL":
-            global _pool
-            _pool = await aiomysql.create_pool(
-                **{
-                    "host": os.getenv("DB_HOST"),
-                    "port": int(os.getenv("DB_PORT")),
-                    "user": os.getenv("DB_USER"),
-                    "password": os.getenv("DB_PASS"),
-                    "db": os.getenv("DB_NAME")
-                },
-                autocommit=True
-            )
+    async def __main(self, discord_bot, ssl_chain):
+        #if _DB_TYPE == "MySQL":
+            #global _pool
+            #_pool = await aiomysql.create_pool(
+                #**{
+                    #"host": os.getenv("DB_HOST"),
+                    #"port": int(os.getenv("DB_PORT")),
+                    #"user": os.getenv("DB_USER"),
+                    #"password": os.getenv("DB_PASS"),
+                    #"db": os.getenv("DB_NAME")
+                #},
+                #autocommit=True
+            #)
 
-        elif _DB_TYPE == "SQLite":
-            with open("db_config/sqlite3.sql", "r", encoding="utf-8") as file:
-                sql_script = file.read()
+        #elif _DB_TYPE == "SQLite":
+        with open("db_config/sqlite3.sql", "r", encoding="utf-8") as file:
+            sql_script = file.read()
 
-            async with aiosqlite.connect("sqlite3.db") as db:
-                await db.executescript(sql_script)
-                await db.commit()
+        async with aiosqlite.connect("sqlite3.db") as db:
+            await db.executescript(sql_script)
+            await db.commit()
 
         asyncio.create_task(self.__validate_players())
 
-        async with websockets.serve(self.__handle_client, "localhost" if _testing or self.localhost else "0.0.0.0", self.port):
+        if ssl_chain != None:
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            ssl_context.load_cert_chain(
+                certfile=ssl_chain[0],
+                keyfile=ssl_chain[1]
+            )
+
+        async with websockets.serve(self.__handle_client, "localhost" if _testing or self.localhost else "0.0.0.0", self.port, ssl=ssl_context if ssl_chain != None else None):
             await _call_registered_function(self.__registered_events, "on_server_ready")
             if discord_bot:
                 await bot.start(os.getenv("DISCORD_BOT_TOKEN"))
@@ -1163,7 +1181,7 @@ class Server(Base):
                         return
                     
                     else:
-                        values = await execDB(f"SELECT password, discord_id, username FROM {_PLAYERS_COLUMN} WHERE LOWER(username)=%s", (json_req["username"].lower(), ))
+                        values = await execDB(f"SELECT password, discord_id, username FROM {_PLAYERS_COLUMN} WHERE LOWER(username)=?", (json_req["username"].lower(), ))
 
                         if not (len(values) != 0 and _check_hash(json_req["password"], values[0][0].encode("utf-8"))):
                             await websocket.send(json.dumps({"reply": "login", "status_code": 400, "message": ClientErrorMessage.WRONG_USERNAME_OR_PASSWORD}))
@@ -1200,7 +1218,7 @@ class Server(Base):
                                 await _call_registered_function(self.__registered_events, "on_player_reconnect", last_connection, old_websocket)
 
                             else:
-                                nickname_color = await execDB(f"SELECT nickname_color FROM {_PLAYERS_COLUMN} WHERE LOWER(username)=%s", (json_req["username"].lower(), ))
+                                nickname_color = await execDB(f"SELECT nickname_color FROM {_PLAYERS_COLUMN} WHERE LOWER(username)=?", (json_req["username"].lower(), ))
                                 json_req["nickname_color"] = nickname_color[0][0]
                                 allowed_to_connect = await _call_registered_function(self.__registered_events, "on_process_player_connect", json_req)
 

@@ -1,20 +1,19 @@
 import discord
-import aiomysql
+#import aiomysql
 import aiosqlite
-import sqlglot
+#import sqlglot
 import bcrypt
 import datetime
 import configparser
 from random import randint
 from dotenv import load_dotenv
-from asyncio import sleep
-from os import getenv
+#from os import getenv
 
 # https://discord.gg/StJxMSc8kM
 
 testing = False
 players_column = "test_players" if testing else "players"
-colors = (["Red", ":red_square:"], ["Orange", ":orange_square:"], ["Yellow", ":yellow_square:"], ["Green", ":green_square:"], ["Blue", ":blue_square:"], ["Purple", ":purple_square:"], ["Brown", ":brown_square:"])
+colors = (["Red", "🟥"], ["Orange", "🟧"], ["Yellow", "🟨"], ["Green", "🟩"], ["Blue", "🟦"], ["Purple", "🟪"], ["Brown", "🟫"])
 
 load_dotenv("./config/.env")
 config = configparser.ConfigParser(allow_no_value=True)
@@ -44,13 +43,12 @@ username_change_cooldowns = {}
 # { "table_name": [ row1, row2, ... ], ... }
 # db_cache = {}
 
-async def execDB(mysql: str, vars: tuple = None, sqlite: str = None) -> list:
+async def execDB(query: str, vars: tuple = None) -> list:
     """Executes an SQL query on DB. This function is a coroutine.
 
     Parameters:
-        mysql (str): MySQL query to execute.
+        query (str): SQLite query to execute.
         vars (tuple): *Optional.* Adds variables to SQL query to escape user input.
-        sqlite (str): *Optional.* SQLite query to execute.
 
     Returns:
         list: A list of selected items. If there are none, it returns an empty list.
@@ -58,35 +56,32 @@ async def execDB(mysql: str, vars: tuple = None, sqlite: str = None) -> list:
 
     selected = []
 
-    if DB_TYPE == "MySQL":
-        async with pool.acquire() as con:
-            async with con.cursor() as cur:
-                if vars != "" and vars != None:
-                    await cur.execute(mysql, vars)
-                else:
-                    await cur.execute(mysql)
+    #if DB_TYPE == "MySQL":
+        #async with pool.acquire() as con:
+            #async with con.cursor() as cur:
+                #if vars != "" and vars != None:
+                    #await cur.execute(mysql, vars)
+                #else:
+                    #await cur.execute(mysql)
 
-                rows = await cur.fetchall()
+                #rows = await cur.fetchall()
 
-                for row in rows:
-                    selected.append(list(row))
+                #for row in rows:
+                    #selected.append(list(row))
 
-    elif DB_TYPE == "SQLite":
-        async with aiosqlite.connect("sqlite3.db") as db:
-            mysql = mysql.replace("%s", "?")
-            query = sqlglot.transpile(mysql, "mysql", "sqlite")[0] if sqlite == None else sqlite
-
-            if vars != "" and vars != None:
-                cur = await db.execute(query, vars)
-            else:
-                cur = await db.execute(query)
+    #elif DB_TYPE == "SQLite":
+    async with aiosqlite.connect("sqlite3.db") as db:
+        if vars != "" and vars != None:
+            cur = await db.execute(query, vars)
+        else:
+            cur = await db.execute(query)
             
-            rows = await cur.fetchall()
+        rows = await cur.fetchall()
 
-            for row in rows:
-                selected.append(list(row))
-            else:
-                await db.commit()
+        for row in rows:
+            selected.append(list(row))
+        else:
+            await db.commit()
 
     return selected
 
@@ -123,7 +118,7 @@ def generate_hash(_str: str):
 
 async def add_user(user: discord.Member, username: str, password: str):
     pass_hash = generate_hash(password).decode("utf-8")
-    await execDB(f"INSERT INTO {players_column} VALUES (%s, %s, %s, %s)", (user.id, username, pass_hash, randint(0, len(colors)-1)))
+    await execDB(f"INSERT INTO {players_column}(discord_id, username, password, nickname_color, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)", (user.id, username, pass_hash, randint(0, len(colors)-1)))
     if REGISTERED_ROLE_ID:
         try:
             await user.add_roles(user.guild.get_role(REGISTERED_ROLE_ID))
@@ -134,7 +129,7 @@ async def delete_user(guild: discord.Guild, user: discord.Member | int):
     user_id = user if isinstance(user, int) else user.id
     user = guild.get_member(user) if isinstance(user, int) else user
 
-    await execDB(f"DELETE FROM {players_column} WHERE discord_id=%s", (user_id, ))
+    await execDB(f"DELETE FROM {players_column} WHERE discord_id=?", (user_id, ))
     if REGISTERED_ROLE_ID and isinstance(user, discord.Member):
         try:
             await user.remove_roles(guild.get_role(REGISTERED_ROLE_ID))
@@ -143,19 +138,19 @@ async def delete_user(guild: discord.Guild, user: discord.Member | int):
 
 @bot.event
 async def on_ready():
-    if DB_TYPE == "MySQL":
-        global pool
-        pool = await aiomysql.create_pool(
-            **{
-                "host": getenv("DB_HOST"),
-                "port": int(getenv("DB_PORT")),
-                "user": getenv("DB_USER"),
-                "password": getenv("DB_PASS"),
-                "db": getenv("DB_NAME")
-            },
-            autocommit=True,
-            connect_timeout=None
-        )
+    #if DB_TYPE == "MySQL":
+        #global pool
+        #pool = await aiomysql.create_pool(
+            #**{
+                #"host": getenv("DB_HOST"),
+                #"port": int(getenv("DB_PORT")),
+                #"user": getenv("DB_USER"),
+                #"password": getenv("DB_PASS"),
+                #"db": getenv("DB_NAME")
+            #},
+            #autocommit=True,
+            #connect_timeout=None
+        #)
 
     guild = bot.get_guild(SERVER_ID)
     role = guild.get_role(REGISTERED_ROLE_ID)
@@ -177,7 +172,7 @@ async def on_ready():
                     while unnamed_username + str(num) in unnamed_players:
                         num += 1
 
-                    await execDB(f"UPDATE {players_column} SET username=%s WHERE discord_id=%s", (unnamed_username + str(num), member.id))
+                    await execDB(f"UPDATE {players_column} SET username=? WHERE discord_id=?", (unnamed_username + str(num), member.id))
 
     # DB caching but it's probably useless because the DB probably won't be big
     # If this changes, I'll implement caching
@@ -190,7 +185,7 @@ async def on_ready():
         if table in ["chatlogs", "logs"]:
             continue
 
-        columns = await execDB("SELECT column_name FROM information_schema.columns WHERE table_name=%s", vars=(table, ), sqlite="SELECT name FROM pragma_table_info(?)")
+        columns = await execDB("SELECT column_name FROM information_schema.columns WHERE table_name=?", vars=(table, ), sqlite="SELECT name FROM pragma_table_info(?)")
         columns = [x[0] for x in columns]
         columns = ", ".join(columns)
         rows = await execDB(f"SELECT {columns} FROM {table};")
@@ -200,19 +195,19 @@ async def on_ready():
             db_cache[table].append(row)
     """
     
-    if DB_TYPE == "MySQL":
+    #if DB_TYPE == "MySQL":
         # Pinging connection between DB just in case
-        while True:
-            await execDB("DO 0;")
-            await sleep(10)
+        #while True:
+            #await execDB("DO 0;")
+            #await sleep(10)
 
 @bot.slash_command(description="Registers a new account.")
 async def register(ctx: discord.ApplicationContext, username: discord.Option(str, "The username you want to use", min_length=1, max_length=50), password: discord.Option(str, "The password you want to use to access your account (min. 8 characters)", min_length=8, max_length=50)): # type: ignore
     await ctx.defer(ephemeral=True)
 
-    registered_for_this_discord_account = await execDB(f"SELECT username FROM {players_column} WHERE discord_id=%s", (ctx.user.id, ))
-    is_already_registered = await execDB(f"SELECT username FROM {players_column} WHERE LOWER(username)=%s", (username.lower(), ))
-    banned = await execDB("SELECT reason FROM bans WHERE discord_id=%s", (ctx.user.id, ))
+    registered_for_this_discord_account = await execDB(f"SELECT username FROM {players_column} WHERE discord_id=?", (ctx.user.id, ))
+    is_already_registered = await execDB(f"SELECT username FROM {players_column} WHERE LOWER(username)=?", (username.lower(), ))
+    banned = await execDB("SELECT reason FROM bans WHERE discord_id=?", (ctx.user.id, ))
 
     if len(banned) != 0:
         await ctx.respond(embed=errorEmbed(ctx.user, f"You can't create an account because you're banned from connecting to the server. Reason: `{banned[0][0]}`"), ephemeral=True)
@@ -230,7 +225,7 @@ async def register(ctx: discord.ApplicationContext, username: discord.Option(str
 
 @bot.slash_command(description="Manages your account.")
 async def manage(ctx: discord.ApplicationContext):
-    registered_for_this_discord_account = await execDB(f"SELECT username FROM {players_column} WHERE discord_id=%s", (ctx.user.id, ))
+    registered_for_this_discord_account = await execDB(f"SELECT username FROM {players_column} WHERE discord_id=?", (ctx.user.id, ))
 
     if len(registered_for_this_discord_account) == 0:
         await ctx.respond(embed=errorEmbed(ctx.user, "You haven't registered an account. Use the command `/register` to make one!"), ephemeral=True)
@@ -261,7 +256,7 @@ async def manage(ctx: discord.ApplicationContext):
                                 return
 
                             username = self.children[0].value
-                            is_already_registered = await execDB(f"SELECT username FROM {players_column} WHERE LOWER(username)=%s", (username.lower(), ))
+                            is_already_registered = await execDB(f"SELECT username FROM {players_column} WHERE LOWER(username)=?", (username.lower(), ))
 
                             if registered_username.lower() == username.lower():
                                 await interaction.response.send_message(embed=errorEmbed(ctx.user, "You can't change your username to your current username. Note that case doesn't matter."), ephemeral=True)
@@ -276,10 +271,10 @@ async def manage(ctx: discord.ApplicationContext):
                                 await interaction.response(embed=errorEmbed(ctx.user, "This username is used by one of our chatbots. Please use a different one!"), ephemeral=True)
                                 return
 
-                            old_username = await execDB(f"SELECT username FROM {players_column} WHERE discord_id=%s", (interaction.user.id, ))
+                            old_username = await execDB(f"SELECT username FROM {players_column} WHERE discord_id=?", (interaction.user.id, ))
 
-                            await execDB(f"UPDATE {players_column} SET username=%s WHERE discord_id=%s;", (self.children[0].value, interaction.user.id))
-                            await execDB(f"INSERT INTO logs(executor, target, action, note) VALUES (%s, %s, %s, %s);", (interaction.user.id, interaction.user.id, "username", f"{old_username[0][0]} -> {self.children[0].value}"))
+                            await execDB(f"UPDATE {players_column} SET username=? WHERE discord_id=?;", (self.children[0].value, interaction.user.id))
+                            await execDB(f"INSERT INTO logs(executor, target, action, note, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP);", (interaction.user.id, interaction.user.id, "username", f"{old_username[0][0]} -> {self.children[0].value}"))
                             username_change_cooldowns[interaction.user.id] = datetime.datetime.now()
                             await interaction.response.send_message(embed=successEmbed(interaction.user, f"Your account username has successfully been changed to `{self.children[0].value}`."), ephemeral=True)
 
@@ -304,7 +299,7 @@ async def manage(ctx: discord.ApplicationContext):
 
                         async def callback(self, interaction: discord.Interaction):
                             pass_hash = generate_hash(self.children[0].value).decode("utf-8")
-                            await execDB(f"UPDATE {players_column} SET password=%s WHERE discord_id=%s", (pass_hash, interaction.user.id))
+                            await execDB(f"UPDATE {players_column} SET password=? WHERE discord_id=?", (pass_hash, interaction.user.id))
                             await interaction.response.send_message(embed=successEmbed(interaction.user, f"Your account password has successfully been changed."), ephemeral=True)
 
                     await interaction.response.send_modal(Modal(title="Change Password"))
@@ -337,7 +332,7 @@ async def manage(ctx: discord.ApplicationContext):
                                 await interaction.response.send_message(errorEmbed(interaction.user, "You can't interact with this."), ephemeral=True)
 
                             else:
-                                await execDB(f"UPDATE {players_column} SET nickname_color=%s WHERE discord_id=%s", (int(select.values[0]), interaction.user.id))
+                                await execDB(f"UPDATE {players_column} SET nickname_color=? WHERE discord_id=?", (int(select.values[0]), interaction.user.id))
                                 await interaction.response.send_message(embed=successEmbed(interaction.user, "Your chat color has successfully been changed."), ephemeral=True)
 
                     await interaction.response.send_message(embed=discord.Embed(
@@ -407,8 +402,8 @@ async def get_discord_user_game_info(ctx: discord.ApplicationContext, username: 
         await ctx.defer(ephemeral=True)
 
         log_limit = 20
-        user = await execDB(f"SELECT discord_id FROM {players_column} WHERE username=%s", (username, ))
-        logs = await execDB("SELECT executor, note FROM logs WHERE action=%s AND note LIKE %s ORDER BY id DESC LIMIT %s;", ("username", f"%{username}%", log_limit))
+        user = await execDB(f"SELECT discord_id FROM {players_column} WHERE username=?", (username, ))
+        logs = await execDB("SELECT executor, note FROM logs WHERE action=? AND note LIKE ? ORDER BY id DESC LIMIT ?;", ("username", f"%{username}%", log_limit))
         logs_str = ""
 
         if len(logs) != 0:
@@ -433,13 +428,13 @@ async def ban_service(ctx: discord.ApplicationContext, user: discord.Option(disc
         await ctx.respond(embed=errorEmbed(ctx.user, "You can't interact with this."), ephemeral=True)
 
     else:
-        is_banned = await execDB("SELECT reason FROM bans WHERE discord_id=%s", (user_id, ))
+        is_banned = await execDB("SELECT reason FROM bans WHERE discord_id=?", (user_id, ))
 
         if len(is_banned) != 0:
             await ctx.respond(embed=errorEmbed(ctx.user, f"This user has already been banned.\nReason: `{is_banned[0][0]}`"), ephemeral=True)
         else:
-            await execDB("INSERT INTO bans VALUES (%s, %s);", (user_id, reason))
-            await execDB("INSERT IGNORE INTO logs(executor, target, action, note) VALUES (%s, %s, %s, %s);", (ctx.user.id, user_id, "ban", reason))
+            await execDB("INSERT INTO bans(discord_id, reason, created_at) VALUES (?, ?, CURRENT_TIMESTAMP);", (user_id, reason))
+            await execDB("INSERT INTO logs(executor, target, action, note, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP);", (ctx.user.id, user_id, "ban", reason))
             await delete_user(ctx.guild, user_id)
             await ctx.respond(embed=successEmbed(ctx.user, f"The user has successfully been banned from connecting to the server.\nReason: `{reason}`"))
 
@@ -451,11 +446,11 @@ async def unban_service(ctx: discord.ApplicationContext, user: discord.Option(di
         await ctx.respond(embed=errorEmbed(ctx.user, "You can't interact with this."), ephemeral=True)
 
     else:
-        is_banned = await execDB("SELECT reason FROM bans WHERE discord_id=%s", (user, ))
+        is_banned = await execDB("SELECT reason FROM bans WHERE discord_id=?", (user, ))
 
         if len(is_banned) == 0:
             await ctx.respond(embed=errorEmbed(ctx.user, f"This user isn't banned."), ephemeral=True)
         else:
-            await execDB("DELETE FROM bans WHERE discord_id=%s;", (user, ))
-            await execDB("INSERT IGNORE INTO logs(executor, target, action, note) VALUES (%s, %s, %s, %s);", (ctx.user.id, user, "unban", reason))
+            await execDB("DELETE FROM bans WHERE discord_id=?;", (user, ))
+            await execDB("INSERT INTO logs(executor, target, action, note, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP);", (ctx.user.id, user, "unban", reason))
             await ctx.respond(embed=successEmbed(ctx.user, f"The user has successfully been unbanned from connecting to the server.\nReason: `{reason}`"))

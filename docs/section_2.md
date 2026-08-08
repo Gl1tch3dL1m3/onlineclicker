@@ -34,8 +34,20 @@ The server stores certain data in certain places. Here is the documented server 
 - `custom/` - Here you can store all your custom scripts and files. This folder will never be edited by any update.
 - `db_config/` - Here you can find scripts for creating a database. SQLite database is created automatically.
 - `docs/` - Here you can find all documentation files.
+- `examples/` - Here you can find examples for certain files.
 - `logs/` - Here you can find server logs. There is usually information or errors here.
 - `onlineclicker/` - Here you can find all OnlineClicker scripts required to run the server. Hovewer, the main script `server.py` is right in the root folder of your server.
+- `.github` - GitHub settings. Not important for you.
+- `CHANGELOG` - This file lists everything that your server version has brought.
+- `LICENSE` - Project license.
+- `README.md` - The README file you can see on GitHub.
+- `requirements.txt` - This file lists all Python libraries the server needs to run.
+- `server.example.py` - This is an example file of `server.py`. You must rename all files that has `.example` in their name!
+- `start.bat` - This file runs the server on Windows.
+- `start.sh` - This file runs the server on Linux.
+- `start_docs.bat` - This file creates a documentation website on localhost on Windows.
+- `start_docs.sh` - This file creates a documentation website on localhost on Linux.
+- `.gitignore` - This file lists all the places in the project that shouldn't be uploaded on GitHub. This isn't important to you.
 
 ## Quick example
 ```py
@@ -62,4 +74,6 @@ async def on_ready():
 # Starts the server and Discord bot
 server.initialize(discord_bot=True)
 ```
+
+You can find more examples like this in the `examples/` folder!
 

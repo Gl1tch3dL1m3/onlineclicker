@@ -1,7 +1,7 @@
 # Overview
 This documentation covers everything related to creating, setting up and programming a server for OnlineClicker. I recommend going through all sections from beginning to end.
 
-The server is programmed in Python. All libraries used can be found in the `requirements.txt` file.
+The server is programmed in Python and uses SQLite database. All used Python libraries can be found in the `requirements.txt` file.
 
 The server also requires a Discord bot for account creating, which is included in the module and can be run along with the server.
 

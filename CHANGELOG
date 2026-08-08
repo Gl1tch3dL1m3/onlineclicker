@@ -1,6 +1,7 @@
 v1.1 (client: v1.6)
 - Added `custom/` folder for you to save your files here. This folder will never be edited by any update.
-- Added `compare_usernames()` and `is_player_in_list()`.
+- Added `examples/` folder to show some server features.
+- Added `get_ini_value()`, `compare_usernames()` and `is_player_in_list()`.
 - Added `CHATBOT_USERNAMES` and `LOCALHOST` to `config.ini`.
 - Added `Server.chatbot_usernames` and `Server.localhost`.
 - Added `ChatBot` class. (Create chatbots using `Server.create_chatbot()`)
@@ -13,5 +14,10 @@ v1.1 (client: v1.6)
 - Fixed bugs related to username checking.
 - Fixed config.ini returning True for all booleans.
 - Fixed other minor issues.
+- Updated docs.
+
+- Added SSL chain support. Now you can add your SSL chain, if you need to!
+- Removed MySQL support, because it was probably not needed. Only SQLite is supported.
+- Removed `DB_TYPE` variable from `config.example.ini`.
 
 - Changed versioning from 1.x.x to 1.x (1.x.x will be used in very small updates such as bugfixes)

@@ -1,8 +1,14 @@
 __pycache__/
+
 custom/*
+!custom/.gitkeep
+
 config/config.ini
 config/.env
 sqlite3.db
+
 logs/*
-server.py
+!logs/.gitkeep
+
+/server.py
 todo.md
