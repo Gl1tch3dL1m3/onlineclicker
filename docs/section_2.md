@@ -7,7 +7,6 @@ Creating your own Discord bot is simple. Follow these steps **(the steps might b
 2. Click on "New Application".
 3. Enter your bot's name and click "Create".
 4. In the "Bot" section, check all intents (Presence Intent, Server Members Intent and so on).
-5. **Uncheck "Public Bot". Your bot should be private!**
 
 ## Inviting your bot
 The Discord bot is created, now we need to get it into your Discord server. It's assumed that you already have a Discord server created.
@@ -17,6 +16,10 @@ Follow these steps:
 2. In "Default Install Settings", add "bot" to scopes in "Guild Install". A "Permissions" menu should appear.
 3. You can add "Administrator" permission to the menu, just to make sure the bot will be accessible.
 4. Now you can invite your bot by visiting the installation link, choosing your server and clicking "Authorize".
+
+And one last thing:
+1. In the "Installation" tab, set "Install Link" to none.
+2. **In the "Bot" section, uncheck "Public Bot". Your bot should be private!**
 
 And now you should have your bot in your server!
 
@@ -28,10 +31,23 @@ If you want to customize your server and Discord bot even more, you can write yo
 ## Server architecture
 The server stores certain data in certain places. Here is the documented server architecture:
 - `config/` - Here you can find all server configuration files.
+- `custom/` - Here you can store all your custom scripts and files. This folder will never be edited by any update.
 - `db_config/` - Here you can find scripts for creating a database. SQLite database is created automatically.
 - `docs/` - Here you can find all documentation files.
+- `examples/` - Here you can find examples for certain files.
 - `logs/` - Here you can find server logs. There is usually information or errors here.
 - `onlineclicker/` - Here you can find all OnlineClicker scripts required to run the server. Hovewer, the main script `server.py` is right in the root folder of your server.
+- `.github` - GitHub settings. Not important for you.
+- `CHANGELOG` - This file lists everything that your server version has brought.
+- `LICENSE` - Project license.
+- `README.md` - The README file you can see on GitHub.
+- `requirements.txt` - This file lists all Python libraries the server needs to run.
+- `server.example.py` - This is an example file of `server.py`. You must rename all files that has `.example` in their name!
+- `start.bat` - This file runs the server on Windows.
+- `start.sh` - This file runs the server on Linux.
+- `start_docs.bat` - This file creates a documentation website on localhost on Windows.
+- `start_docs.sh` - This file creates a documentation website on localhost on Linux.
+- `.gitignore` - This file lists all the places in the project that shouldn't be uploaded on GitHub. This isn't important to you.
 
 ## Quick example
 ```py
@@ -40,12 +56,14 @@ from onlineclicker.onlineclicker import *
 
 # Creates a server object
 server = Server()
+# Makes a chatbot (you need to specify chatbot name in config.ini!)
+chatbot = server.create_chatbot(badges=[Badge.VERIFIED], nickname_color=NicknameColor.ORANGE)
 
 # Makes a bot that sends "pong!" when someone sends "/ping".
 @server.event
 async def on_player_chat(player: Player, message: Message):
     if message.content == "/ping":
-        await server.send_chat(player.node, Message("GrandmaBot", "pong!", [Badge.VERIFIED], NicknameColor.ORANGE))
+        await chatbot.send_message(player.node, "pong!")
 
 # You can also program your Discord bot here by using the "bot" variable from "onlineclicker/bot.py"
 # The Discord bot is made with Pycord (https://pycord.dev/)
@@ -56,4 +74,6 @@ async def on_ready():
 # Starts the server and Discord bot
 server.initialize(discord_bot=True)
 ```
+
+You can find more examples like this in the `examples/` folder!
 

@@ -1,1 +1,1 @@
-python3 -m pdoc onlineclicker/onlineclicker.py --search --logo "https://github.com/Gl1tch3dL1m3/onlineclicker/blob/main/docs/logo.png?raw=true" --favicon "https://github.com/Gl1tch3dL1m3/onlineclicker/blob/main/docs/logo.png?raw=true" --no-include-undocumented --template-directory docs
+python3 -m pdoc onlineclicker/onlineclicker.py --search --logo "https://github.com/glitchedlime/onlineclicker/blob/main/docs/logo.png?raw=true" --favicon "https://github.com/glitchedlime/onlineclicker/blob/main/docs/logo.png?raw=true" --no-include-undocumented --template-directory docs

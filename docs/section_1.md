@@ -1,7 +1,7 @@
 # Overview
 This documentation covers everything related to creating, setting up and programming a server for OnlineClicker. I recommend going through all sections from beginning to end.
 
-The server is programmed in Python. All libraries used can be found in the `requirements.txt` file.
+The server is programmed in Python and uses SQLite database. All used Python libraries can be found in the `requirements.txt` file.
 
 The server also requires a Discord bot for account creating, which is included in the module and can be run along with the server.
 
@@ -30,16 +30,33 @@ To install Python (Windows):
 Type `cmd` in the search bar. This will open a command prompt. Type `python --version` in the terminal and it should list the version of Python you downloaded.
 
 ## Downloading the server
-Now that you have Python installed, you can download the server files! You can download the latest version of the server by going to the [GitHub page of OnlineClicker](https://github.com/glitchedlime/onlineclicker), clicking the green "Code" button and downloading the ZIP file.
+Now that you have Python installed, you can download the server files!
+
+### Using Git (Optional)
+**It's REALLY recommended to use Git to download and update your server. Git is very useful for updating the server, because it saves you a lot of time from copying and rewriting server files. It handles updates by typing a single command, so consider using it!**
+
+If you want to use Git, you need to install it from the [official Git website](https://git-scm.com/install/). Complete the installation process, open `cmd` and type `git --version` to verify if it's installed and close the terminal window. On Linux, open your terminal and type `sudo apt install git`.
+
+To install the server using Git (Windows):
+1. In the file explorer, go to the directory where you want your server to be created.
+2. In the file explorer, type `cmd` in the path bar (next to the search bar) and press ENTER. This will open a terminal.
+3. Download (clone) the server using this command: `git clone https://github.com/glitchedlime/onlineclicker.git`.
+
+That's it! And if you want to update the server (this is the part where Git is very useful), just do the same steps with this command: `git pull`.
+
+### Manual download (not recommended)
+You can download the latest version of the server by going to the [GitHub page of OnlineClicker](https://github.com/glitchedlime/onlineclicker), clicking the green "Code" button and downloading the ZIP file.
 
 Don't forget to extract the ZIP file after downloading it!
+
+If you want to update the server, you have to manually download it and extract new files to your server.
 
 ## Installing Python libraries
 Server scripts require certain Python libraries that are necessary for the server to function (e.g. communication with players).
 
 To install all the libraries (Windows):
 1. Open your server folder and find `requirements.txt` file.
-2. In the file explorer window, type `cmd` in the path bar (next to the search bar) and press ENTER. This will open a command prompt.
+2. In the file explorer, type `cmd` in the path bar (next to the search bar) and press ENTER. This will open a terminal.
 3. In the command prompt, type `pip install -r requirements.txt`. This will install all libraries needed for the server to run.
 4. Close the command prompt.
 
